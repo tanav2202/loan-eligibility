@@ -1,4 +1,4 @@
-name: 'wine-quality-analysis'
+name: 'loan-analysis'
 channels:
   - conda-forge
   - defaults
@@ -24,6 +24,7 @@ dependencies:
   - xgboost
   - catboost
   - nltk
+  - kaggle
   - imbalanced-learn
   - pip:
     - mglearn
