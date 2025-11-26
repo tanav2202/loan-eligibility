@@ -4,27 +4,27 @@ channels:
   # - defaults
 dependencies:
   - python>=3.11,<3.13  
-  - pip
-  - ipykernel
-  - nb_conda_kernels
+  - pip=25.3
+  - ipykernel=7.1.0
+  - nb_conda_kernels=2.5.1
   - altair=5.4.* 
-  - vega_datasets
-  - scipy
+  - vega_datasets=0.9.0
+  - scipy=1.16.3
   - matplotlib>=3.2.2
-  - scikit-learn
+  - scikit-learn=1.7.2
   - requests>=2.24.0
-  - graphviz
-  - python-graphviz
+  - graphviz=14.0.4
+  - python-graphviz=0.21
   # - eli5
   # - shap>=0.45 
-  - jinja2
-  - lightgbm
-  - spacy
-  - xgboost
+  - jinja2=3.1.6
+  - lightgbm=4.6.0
+  - spacy=3.8.11
+  - xgboost=3.1.2
   # - catboost
-  - nltk
-  - kaggle
-  - imbalanced-learn
+  - nltk=3.9.2
+  - kaggle=1.8.0
+  - imbalanced-learn=0.14.0
   # - pip:
   #   - mglearn
   #   - spacymoji
