@@ -25,6 +25,8 @@ dependencies:
   - nltk=3.9.2
   - kaggle=1.8.0
   - imbalanced-learn=0.14.0
+  - conda
+  - mamba
   # - pip:
   #   - mglearn
   #   - spacymoji
