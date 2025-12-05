@@ -16,7 +16,7 @@ def download_dataset():
     # download to ./data/ and unzip
     kaggle.api.dataset_download_files(
         dataset_name,
-        path='data/temp.csv',
+        path='data',
         unzip=True
     )
     

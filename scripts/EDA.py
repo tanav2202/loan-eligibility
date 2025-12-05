@@ -2,6 +2,7 @@
 
 import altair as alt
 import pandas as pd
+import numpy as np
 import os
 import click
 from typing import List
@@ -58,7 +59,7 @@ class ExploratoryDataAnalysis():
             )
     
     @staticmethod
-    def compare_categorical_features(
+    def compare_categorical_features_v1(
             data: pd.DataFrame,
             categorical_cols: List[str],
             target_name: str,
@@ -112,6 +113,83 @@ class ExploratoryDataAnalysis():
         )
     
         return final
+    
+    @staticmethod
+    def compare_categorical_features(
+        data: pd.DataFrame,
+        categorical_cols: List[str],
+        target_name: str,
+        columns: int = 3
+    ) -> alt.VConcatChart:
+        """
+        Compare categorical features by plotting the mean numeric target value 
+        for each category. Produces a grid of bar charts.
+        """
+
+        # --- Validation ---
+        if target_name not in data.columns:
+            raise ValueError(f"Target column '{target_name}' not found in DataFrame.")
+
+        if not np.issubdtype(data[target_name].dtype, np.number):
+            raise ValueError("Target variable must be numeric for this plot.")
+
+        for col in categorical_cols:
+            if col not in data.columns:
+                raise ValueError(f"Categorical column '{col}' not found in DataFrame.")
+
+        charts = []
+
+        # --- Build each subplot ---
+        for col in categorical_cols:
+
+            # Compute mean target per category
+            summary = (
+                data
+                .groupby(col)[target_name]
+                .mean()
+                .reset_index()
+            )
+
+            base = alt.Chart(summary).properties(width=180, height=140)
+
+            bars = (
+                base.mark_bar()
+                .encode(
+                    x=alt.X(f"{col}:N", title="Category"),
+                    y=alt.Y(f"{target_name}:Q", title=f"Mean {target_name}"),
+                    color=alt.Color(f"{target_name}:Q", scale=alt.Scale(scheme="blues"))
+                )
+            )
+
+            labels = (
+                base.mark_text(dy=-3, fontSize=11)
+                .encode(
+                    x=alt.X(f"{col}:N"),
+                    y=alt.Y(f"{target_name}:Q"),
+                    text=alt.Text(f"{target_name}:Q", format=".2f")
+                )
+            )
+
+            chart = (bars + labels).properties(title=col)
+            charts.append(chart)
+
+        # --- Assemble into grid ---
+        rows = []
+        for i in range(0, len(charts), columns):
+            row = alt.hconcat(*charts[i:i+columns])
+            rows.append(row)
+
+        final = (
+            alt.vconcat(*rows)
+            .resolve_scale()
+            .configure_concat(spacing=20)
+            .properties(
+                title=f"Categorical Feature Comparison — Mean {target_name}"
+            )
+        )
+
+        return final
+    
     
     @staticmethod
     def density_feature_plots(
@@ -324,7 +402,7 @@ def main(processed_training_data, plot_to):
     # target_name = "target"  # change if necessary
     
     numerical_cols = ['Applicant_Income', 'Coapplicant_Income', 'Loan_Amount', 'Loan_Amount_Term', 'Dependents']
-    categorical_cols = ['Property_Area']
+    categorical_cols = ['Credit_History', 'Gender', 'Married', 'Education', 'Self_Employed','Property_Area']
     # binary_features = ['Credit_History', 'Gender', 'Married', 'Education', 'Self_Employed']
     # drop_features = ['Customer_ID']
     target_name = 'Loan_Status'
@@ -354,5 +432,5 @@ if __name__ == "__main__":
     
 # usage:
 # python scripts/eda.py \
-#   --processed-training-data data/processed/loan_test.csv \
+#   --processed-training-data data/processed/df_test.csv \
 #   --plot-to results/figures
