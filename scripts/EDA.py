@@ -2,9 +2,11 @@
 
 import altair as alt
 import pandas as pd
+import os
+import click
 from typing import List
 
-class EDA():
+class ExploratoryDataAnalysis():
     
     @staticmethod
     def univariate_feature_distributions(
@@ -292,3 +294,65 @@ class EDA():
         return final
 
 
+@click.command()
+@click.option(
+    '--processed-training-data',
+    type=str,
+    required=True,
+    help="Path to processed training data CSV"
+)
+@click.option(
+    '--plot-to',
+    type=str,
+    required=True,
+    help="Directory where PNG plots will be saved"
+)
+def main(processed_training_data, plot_to):
+    """
+    Load processed training data, generate ALL EDA plots,
+    and save them to the 'plot_to' directory as PNG files.
+    """
+
+    # Load data
+    data = pd.read_csv(processed_training_data)
+
+    os.makedirs(plot_to, exist_ok=True)
+
+    # Identify columns
+    # numerical_cols = [c for c in data.select_dtypes(include='number').columns if c != "target"]
+    # categorical_cols = [c for c in data.select_dtypes(include='object').columns]
+    # target_name = "target"  # change if necessary
+    
+    numerical_cols = ['Applicant_Income', 'Coapplicant_Income', 'Loan_Amount', 'Loan_Amount_Term', 'Dependents']
+    categorical_cols = ['Property_Area']
+    # binary_features = ['Credit_History', 'Gender', 'Married', 'Education', 'Self_Employed']
+    # drop_features = ['Customer_ID']
+    target_name = 'Loan_Status'
+
+    # Build your plots
+    charts = {
+        "univariate.png": ExploratoryDataAnalysis.univariate_feature_distributions(data, numerical_cols),
+        "categorical_compare.png": ExploratoryDataAnalysis.compare_categorical_features(data, categorical_cols, target_name),
+        "density_plots.png": ExploratoryDataAnalysis.density_feature_plots(data, numerical_cols, target_name),
+        "boxplots.png": ExploratoryDataAnalysis.boxplot_feature_plots(data, numerical_cols, target_name),
+        "correlation_heatmap.png": ExploratoryDataAnalysis.correlation_plot(data, numerical_cols),
+    }
+
+    # Save charts
+    for filename, chart in charts.items():
+        out_path = os.path.join(plot_to, filename)
+        chart.save(out_path)
+        print(f"Saved: {out_path}")
+
+    print("All EDA plots generated successfully!")
+
+
+if __name__ == "__main__":
+    main()
+    
+    
+    
+# usage:
+# python scripts/eda.py \
+#   --processed-training-data data/processed/loan_test.csv \
+#   --plot-to results/figures
