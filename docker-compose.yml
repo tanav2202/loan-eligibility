@@ -1,0 +1,14 @@
+services:
+  # run jupyter notebook inside jupyter 
+  jupyter-notebook:
+    image:  tanav2202/loan-eligibility
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/home/jovyan
+    deploy:
+      resources:
+        limits:
+          memory: 5G
+    platform: linux/amd64
+    
