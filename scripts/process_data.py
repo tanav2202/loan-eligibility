@@ -388,4 +388,3 @@ if __name__ == "__main__":
 # python scripts/process_data.py \
 #     --raw-data "data/raw/Loan Eligibility Prediction.csv" \
 #     --write-to data/processed
-#     --random_state 42
