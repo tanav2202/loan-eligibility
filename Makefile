@@ -1,6 +1,6 @@
 # Makefile for Loan Eligibility Prediction Analysis
 # Author: Tanav Singh Bajaj, Ali Boloor, Gurleen Kaur, Justin Mak
-# Date: 2024
+# Date: 2025
 
 .PHONY: all clean help
 
