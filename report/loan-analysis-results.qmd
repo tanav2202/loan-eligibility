@@ -38,7 +38,7 @@ confusion_matrix = pd.read_csv("../results/tables/confusion_matrix.csv")
 
 ## Confusion Matrix
 
-![Confusion Matrix](results/figures/confusion_matrix.png){#fig-confusion_matrix width=100%}
+![Confusion Matrix](../results/figures/confusion_matrix.png){#fig-confusion_matrix width=100%}
 
 Based on the confusion matrix, we can derive several key performance metrics for our loan eligibility prediction model. The model correctly predicted `{python} confusion_matrix.iloc[0, 1]` loan denials and `{python} confusion_matrix.iloc[1, 2]` loan approvals. The model incorrectly predicted `{python} confusion_matrix.iloc[0, 2]` loan denials as approvals (false positives) and `{python} confusion_matrix.iloc[1, 1]` loan approvals as denials (false negatives). From this, we can see that the model is better at predicting approvals than denials. Depending on the business context, we may prefer to minimize the false negatives to avoid losing out on potential customers who would have been approved for loans. But, we also need to consider the cost of false positives and minimizing the number of bad loans approved. 
 
@@ -52,13 +52,13 @@ From the classification report, we can see that the false precision is `{python}
 
 ## Precision Recall Curve
 
-![Precision-Recall Curve](results/figures/precision_recall_curve.png){#fig-precision_recall width=100%}
+![Precision-Recall Curve](../results/figures/precision_recall_curve.png){#fig-precision_recall width=100%}
 
 From the precision-recall curve, we can see that as we increase the recall, the precision remains high. The AP score is 0.87. This indicates good performance of the model in identifying loan approvals. 
 
 ## ROC Curve
 
-![ROC Curve](results/figures/roc_curve.png){#fig-roc width=100%}
+![ROC Curve](../results/figures/roc_curve.png){#fig-roc width=100%}
 
 We can see from the ROC curve and the AUC score of 0.80 that the model has good ability to distinguish between approved and denied loan applications. The score suggests that while the model is effective at distinguishing between the two classes, there is still room for improvement for its predictive performance.
 
