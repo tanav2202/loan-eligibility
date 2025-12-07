@@ -13,6 +13,8 @@ dependencies:
   - matplotlib>=3.2.2
   - scikit-learn=1.7.2
   - requests>=2.24.0
+  - click>=8.1.7
+  - pandas=2.1.2
   - graphviz=14.0.4
   - python-graphviz=0.21
   # - eli5
