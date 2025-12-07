@@ -57,27 +57,38 @@ data/processed/y_train.csv
 
 
 # -------------------------------------------------------
-# 5. Test model (new)
+# 5. Evaluate and test model 
 # -------------------------------------------------------
-results/models/test_results.txt: \
-scripts/test_model.py \
-results/models/trained_model.pickle \
+results/tables/test_scores.csv \
+results/tables/cross_validation_results.csv \
+results/tables/confusion_matrix.csv \
+results/tables/classification_report.csv \
+results/figures/precision_recall_curve.png \
+results/figures/roc_curve.png : \
+scripts/evaluate_loan_predictor.py \
 data/processed/X_test_scaled.csv \
-data/processed/y_test.csv
-	python scripts/test_model.py \
-		--model results/models/trained_model.pickle \
-		--x-test data/processed/X_test_scaled.csv \
-		--y-test data/processed/y_test.csv \
-		--write-to results/models
-
+data/processed/y_test.csv \
+data/processed/X_train_scaled.csv \
+data/processed/y_train.csv \
+results/models/trained_model.pkl
+	python scripts/evaluate_loan_predictor.py \
+		--scaled-test-data data/processed/X_test_scaled.csv \
+		--test-target data/processed/y_test.csv \
+		--scaled-train-data data/processed/X_train_scaled.csv \
+		--train-target data/processed/y_train.csv \
+		--pipeline-from results/models \
+		--results-to results/
 
 # -------------------------------------------------------
 # 6. Build HTML report with Quarto
 # -------------------------------------------------------
 report/_build/html/index.html: \
 reports/report.qmd \
-results/models/trained_model.pickle \
-results/models/test_results.txt \
+results/models/trained_model.pkl \
+results/tables/test_scores.csv \
+results/tables/cross_validation_results.csv \
+results/tables/confusion_matrix.csv \
+results/tables/classification_report.csv \
 results/figures/boxplots.png \
 results/figures/categorical_compare.png \
 results/figures/correlation_heatmap.png \
@@ -87,10 +98,11 @@ results/figures/univariate.png
 
 
 # -------------------------------------------------------
-# 7. Cleaning rule (new)
+# 7. Cleaning rule 
 # -------------------------------------------------------
 clean:
 	rm -rf data/processed/*.csv
 	rm -rf results/models/*
 	rm -rf results/figures/*.png
+	rm -rf results/tables/*.csv
 	rm -rf report/_build
