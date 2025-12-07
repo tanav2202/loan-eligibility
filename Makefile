@@ -84,6 +84,7 @@ results/models/trained_model.pkl
 # -------------------------------------------------------
 report/_build/html/index.html: \
 reports/loan-analysis.qmd \
+reports/references.bib \
 results/models/trained_model.pkl \
 results/tables/test_scores.csv \
 results/tables/cross_validation_results.csv \
