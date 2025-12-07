@@ -32,9 +32,9 @@ test_scores = pd.read_csv("../results/tables/test_scores.csv")
 confusion_matrix_csv = pd.read_csv("../results/tables/confusion_matrix.csv")
 ```
 
-#### Model Testing
-
 #### Accuracy Score
+
+The accuracy score of the model is `{python} round(test_scores.iloc[0, 0], 2)`. This means that the model correctly predicts loan eligibility `{python} round(test_scores.iloc[0, 0], 2)*100`% of the time.
 
 #### Confusion Matrix
 
@@ -48,18 +48,18 @@ Based on the confusion matrix, we can derive several key performance metrics for
 Markdown(classification_report.to_markdown())
 ```
 
-From the classification report, we can see that the false precision is `{python} round(classification_report.iloc[0, 1], 2)`. Meaning that when the model predicts a loan will be denied, it is correct `{python} round(classification_report.iloc[0, 1], 2) * 100`% of the time. The recall is 0.47, meaning that the model correctly identifies 47% of all actual loan denials. The true precision is 0.80, meanin gthat when the model predicts a loan will be apporved, it is correct 80% of the time. The recall is 0.95, meaning that the model correctly identifies 95% of all actual loan approvals. From the weighted average column, we can see the overall accuracy of the model is 0.80, meaning that the model correctly predicts loan eligibility 80% of the time.
+From the classification report, we can see that the false precision is `{python} round(classification_report.iloc[0, 1], 2)`. Meaning that when the model predicts a loan will be denied, it is correct `{python} round(classification_report.iloc[0, 1], 2) * 100`% of the time. The recall is `{python} round(classification_report.iloc[1, 1], 2)`, meaning that the model correctly identifies `{python} round(classification_report.iloc[1, 1], 2)*100`% of all actual loan denials. The true precision is `{python} round(classification_report.iloc[0, 2], 2)`, meaning that when the model predicts a loan will be approved, it is correct `{python} round(classification_report.iloc[0, 2], 2)*100`% of the time. The recall is `{python} round(classification_report.iloc[1, 2], 2)`, meaning that the model correctly identifies `{python} round(classification_report.iloc[1, 2], 2)*100`% of all actual loan approvals. From the weighted average column, we can see the overall accuracy of the model is `{python} round(classification_report.iloc[0, 3], 2)`, meaning that the model correctly predicts loan eligibility `{python} round(classification_report.iloc[0, 3], 2)*100`% of the time.
 
 #### Precision Recall Curve
 
 ![Precision-Recall Curve](../results/figures/precision_recall_curve.png){#fig-precision_recall width=100%}
 
-From the precision-recall curve, we can see that as we increase the recall, the precision remains high. The AP score is 0.87. This indicates good performance of the model in identifying loan approvals. 
+From the precision-recall curve, we can see that as we increase the recall, the precision remains high. The AP score is `{python} round(cross_validation_results.iloc[3, 1], 2)`. This indicates good performance of the model in identifying loan approvals. 
 
 #### ROC Curve
 
 ![ROC Curve](../results/figures/roc_curve.png){#fig-roc width=100%}
 
-We can see from the ROC curve and the AUC score of 0.80 that the model has good ability to distinguish between approved and denied loan applications. The score suggests that while the model is effective at distinguishing between the two classes, there is still room for improvement for its predictive performance.
+We can see from the ROC curve and the AUC score of `{python} round(classification_report.iloc[2, 3], 2)` that the model has good ability to distinguish between approved and denied loan applications. The score suggests that while the model is effective at distinguishing between the two classes, there is still room for improvement for its predictive performance.
 
 # References
