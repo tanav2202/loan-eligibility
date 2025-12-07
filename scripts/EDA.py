@@ -1,5 +1,3 @@
-
-
 import altair as alt
 import pandas as pd
 import numpy as np
@@ -7,7 +5,9 @@ import os
 import click
 from typing import List
 
+
 class ExploratoryDataAnalysis():
+    """Class containing static methods for generating EDA visualizations."""
     
     @staticmethod
     def univariate_feature_distributions(
@@ -59,62 +59,6 @@ class ExploratoryDataAnalysis():
             )
     
     @staticmethod
-    def compare_categorical_features_v1(
-            data: pd.DataFrame,
-            categorical_cols: List[str],
-            target_name: str,
-            columns: int = 3
-        ) -> alt.VConcatChart:
-        """
-        Compare binary/categorical features graphically across classes in `target_name`.
-        Produces a grid of bar charts (one per feature), each with independent scales.
-        """
-    
-        if target_name not in data.columns:
-            raise ValueError(f"target_name '{target_name}' not found.")
-    
-        for col in categorical_cols:
-            if col not in data.columns:
-                raise ValueError(f"Column '{col}' not found.")
-    
-        charts = []
-        for col in categorical_cols:
-    
-            base = alt.Chart(data).properties(width=180, height=140)
-    
-            bars = (
-                base.mark_bar()
-                .encode(
-                    x=alt.X(f"{col}:N", title="Category"),
-                    y=alt.Y("count():Q", title="Count"),
-                    color=alt.Color(f"{target_name}:N", title=target_name)
-                )
-            )
-    
-            labels = (
-                base.mark_text(dy=-3, fontSize=11)
-                .encode(
-                    x=alt.X(f"{col}:N"),
-                    y=alt.Y("count():Q"),
-                    text=alt.Text("count():Q")
-                )
-            )
-    
-            chart = (bars + labels).properties(title=col)
-            charts.append(chart)
-    
-        rows = []
-        for i in range(0, len(charts), columns):
-            row = alt.hconcat(*charts[i:i+columns])
-            rows.append(row)
-    
-        final = alt.vconcat(*rows).properties(
-            title="Categorical Feature Comparison Across Target Classes"
-        )
-    
-        return final
-    
-    @staticmethod
     def compare_categorical_features(
         data: pd.DataFrame,
         categorical_cols: List[str],
@@ -126,7 +70,6 @@ class ExploratoryDataAnalysis():
         for each category. Produces a grid of bar charts.
         """
 
-        # --- Validation ---
         if target_name not in data.columns:
             raise ValueError(f"Target column '{target_name}' not found in DataFrame.")
 
@@ -139,9 +82,7 @@ class ExploratoryDataAnalysis():
 
         charts = []
 
-        # --- Build each subplot ---
         for col in categorical_cols:
-
             # Compute mean target per category
             summary = (
                 data
@@ -173,7 +114,7 @@ class ExploratoryDataAnalysis():
             chart = (bars + labels).properties(title=col)
             charts.append(chart)
 
-        # --- Assemble into grid ---
+        # Assemble into grid
         rows = []
         for i in range(0, len(charts), columns):
             row = alt.hconcat(*charts[i:i+columns])
@@ -189,7 +130,6 @@ class ExploratoryDataAnalysis():
         )
 
         return final
-    
     
     @staticmethod
     def density_feature_plots(
@@ -275,7 +215,6 @@ class ExploratoryDataAnalysis():
         charts = []
     
         for col in numerical_cols:
-    
             base = alt.Chart(data).properties(width=180, height=140)
     
             box = (
@@ -374,63 +313,96 @@ class ExploratoryDataAnalysis():
 
 @click.command()
 @click.option(
-    '--processed-training-data',
+    '--train-data',
     type=str,
     required=True,
-    help="Path to processed training data CSV"
+    help="Path to processed training data CSV (e.g., df_train.csv)"
 )
 @click.option(
-    '--plot-to',
+    '--output-dir',
     type=str,
-    required=True,
+    default="results/figures",
     help="Directory where PNG plots will be saved"
 )
-def main(processed_training_data, plot_to):
+def main(train_data, output_dir):
     """
-    Load processed training data, generate ALL EDA plots,
-    and save them to the 'plot_to' directory as PNG files.
+    Generate exploratory data analysis (EDA) visualizations.
+    
+    This script creates the following plots:
+    1. Univariate distributions of numerical features
+    2. Categorical feature comparison by loan status
+    3. Density plots by loan status
+    4. Boxplots showing outliers
+    5. Correlation heatmap
+    
+    All plots are saved as PNG files in the specified output directory.
+    
+    Examples:
+        python scripts/EDA.py \\
+            --train-data data/processed/df_train.csv \\
+            --output-dir results/figures
     """
 
     # Load data
-    data = pd.read_csv(processed_training_data)
-
-    os.makedirs(plot_to, exist_ok=True)
-
-    # Identify columns
-    # numerical_cols = [c for c in data.select_dtypes(include='number').columns if c != "target"]
-    # categorical_cols = [c for c in data.select_dtypes(include='object').columns]
-    # target_name = "target"  # change if necessary
+    print(f"Loading training data from: {train_data}")
+    if not os.path.exists(train_data):
+        raise FileNotFoundError(f"Training data file not found: {train_data}")
     
-    numerical_cols = ['Applicant_Income', 'Coapplicant_Income', 'Loan_Amount', 'Loan_Amount_Term', 'Dependents']
-    categorical_cols = ['Credit_History', 'Gender', 'Married', 'Education', 'Self_Employed','Property_Area']
-    # binary_features = ['Credit_History', 'Gender', 'Married', 'Education', 'Self_Employed']
-    # drop_features = ['Customer_ID']
+    data = pd.read_csv(train_data)
+    print(f"  Shape: {data.shape}")
+
+    # Create output directory
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Define feature groups
+    numerical_cols = [
+        'Applicant_Income', 
+        'Coapplicant_Income', 
+        'Loan_Amount', 
+        'Loan_Amount_Term', 
+        'Dependents'
+    ]
+    
+    categorical_cols = [
+        'Credit_History', 
+        'Gender', 
+        'Married', 
+        'Education', 
+        'Self_Employed',
+        'Property_Area'
+    ]
+    
     target_name = 'Loan_Status'
 
-    # Build your plots
+    print("\nGenerating EDA plots...")
+
+    # Build and save plots
     charts = {
-        "univariate.png": ExploratoryDataAnalysis.univariate_feature_distributions(data, numerical_cols),
-        "categorical_compare.png": ExploratoryDataAnalysis.compare_categorical_features(data, categorical_cols, target_name),
-        "density_plots.png": ExploratoryDataAnalysis.density_feature_plots(data, numerical_cols, target_name),
-        "boxplots.png": ExploratoryDataAnalysis.boxplot_feature_plots(data, numerical_cols, target_name),
-        "correlation_heatmap.png": ExploratoryDataAnalysis.correlation_plot(data, numerical_cols),
+        "univariate.png": ExploratoryDataAnalysis.univariate_feature_distributions(
+            data, numerical_cols
+        ),
+        "categorical_compare.png": ExploratoryDataAnalysis.compare_categorical_features(
+            data, categorical_cols, target_name
+        ),
+        "density_plots.png": ExploratoryDataAnalysis.density_feature_plots(
+            data, numerical_cols, target_name
+        ),
+        "boxplots.png": ExploratoryDataAnalysis.boxplot_feature_plots(
+            data, numerical_cols, target_name
+        ),
+        "correlation_heatmap.png": ExploratoryDataAnalysis.correlation_plot(
+            data, numerical_cols
+        ),
     }
 
     # Save charts
     for filename, chart in charts.items():
-        out_path = os.path.join(plot_to, filename)
+        out_path = os.path.join(output_dir, filename)
         chart.save(out_path)
-        print(f"Saved: {out_path}")
+        print(f"   Saved: {out_path}")
 
-    print("All EDA plots generated successfully!")
+    print(f"\n All EDA plots generated successfully in: {output_dir}")
 
 
 if __name__ == "__main__":
     main()
-    
-    
-    
-# usage:
-# python scripts/eda.py \
-#   --processed-training-data data/processed/df_test.csv \
-#   --plot-to results/figures

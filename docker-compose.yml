@@ -1,14 +1,14 @@
 services:
-  # run jupyter notebook inside jupyter 
-  jupyter-notebook:
-    image:  tanav2202/loan-eligibility
+  analysis:
+    image: tanav2202/loan-eligibility:latest
     ports:
       - "8888:8888"
     volumes:
-      - .:/home/jovyan
+      - .:/home/jovyan/work
+    working_dir: /home/jovyan/work
     deploy:
       resources:
         limits:
           memory: 5G
     platform: linux/amd64
-    
+    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
