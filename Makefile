@@ -83,7 +83,7 @@ results/models/trained_model.pkl
 # 6. Build HTML report with Quarto
 # -------------------------------------------------------
 report/_build/html/index.html: \
-reports/report.qmd \
+reports/loan-analysis.qmd \
 results/models/trained_model.pkl \
 results/tables/test_scores.csv \
 results/tables/cross_validation_results.csv \
