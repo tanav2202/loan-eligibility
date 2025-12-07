@@ -1,16 +1,7 @@
 ---
-title: Loan Eligibility Prediction Analysis and Model Training/Testing File
+title: "Loan Eligibility Prediction"
 author: "Justin, Ali, Tanav, Gurleen"
-date: "2025/12/07"
-jupyter: python3
-format: 
-    html:
-        toc: true
-        toc-depth: 2
-    pdf:
-        toc: true
-        toc-depth: 2
-bibliography: references.bib
+jupyter: loan-analysis
 execute:
   echo: false
   warning: false
@@ -24,36 +15,43 @@ editor: source
 ```{python}
 import warnings
 warnings.filterwarnings('ignore')
-from scripts.temp import temp_fun
-temp_fun()
+# from scripts.temp import temp_fun
+# temp_fun()
+import pandas as pd
+import pickle
+from IPython.display import Markdown, display
+from tabulate import tabulate
 ```
 
 ## Fetch and Read the data
 
 ```{python}
-# Just import and run
-from scripts.data_fetch import download_dataset
-import pandas as pd
+# # Just import and run
+# from scripts.data_fetch import download_dataset
+# import pandas as pd
 
-# Download
-download_dataset()
+# # Download
+# download_dataset()
+```
 
-# # Load data
-df = pd.read_csv('data/Loan Eligibility Prediction.csv')  # adjust filename if needed
+
+```{python}
+# Load data
+df = pd.read_csv('../data/raw/Loan Eligibility Prediction.csv')  # adjust filename if needed
 df.head()
 ```
 
 ## Data Validation
 
 ```{python}
-from scripts.data_validation import DataValidation
+# from scripts.data_validation import DataValidation
 
-validator = DataValidation(
-    DATA_PATH="data/Loan Eligibility Prediction.csv",
-    TARGET_COL="Loan_Status"
-)
+# validator = DataValidation(
+#     DATA_PATH="data/Loan Eligibility Prediction.csv",
+#     TARGET_COL="Loan_Status"
+# )
 
-validator.validate_dataset()
+# validator.validate_dataset()
 ```
 
 ## Exploratory Data Analysis
@@ -101,15 +99,15 @@ target_name = 'Loan_Status'
 ```
 
 ```{python}
-from scripts.EDA import EDA
-eda = EDA()
+# from scripts.EDA import EDA
+# eda = EDA()
 ```
 
 ```{python}
-eda.univariate_feature_distributions(
-    data=df,
-    column_names=numerical_features
-)
+# eda.univariate_feature_distributions(
+#     data=df,
+#     column_names=numerical_features
+# )
 ```
 
 `Application_Income` and `Coapplication_Income` exibit right skewed distributions as is common with this type of variable. `Loan_Amount` has a distribution closer to *Normal* but still has a heavy right tail. The loan terms are concentrated around 3-year. The number of dependents are also mostly concentraded on $0$. In our analysis we treat the `Dependent` feature as numerical, but it can also be thought of as a categorical feature.  
@@ -121,147 +119,98 @@ Demographic features exhibit more modest effects. Gender shows a slight skew tow
 Overall, `Credit_History`, `Property_Area`, and `Married` status appear to be the most influential categorical features in distinguishing between approved and denied applications, while `Gender`, `Education`, and `Self_Employed` provide weaker but still observable patterns.
 
 ```{python}
-eda.compare_categorical_features(
-    data=df,
-    categorical_cols=categorical_features+binary_features,
-    target_name=target_name
-)
+# eda.compare_categorical_features(
+#     data=df,
+#     categorical_cols=categorical_features+binary_features,
+#     target_name=target_name
+# )
 ```
 
 The density plots for the numerical features highlight meaningful differences between approved and rejected loan applications. `Applicant_Income` and `Coapplicant_Income` both exhibit right-skewed distributions, but approved applicants tend to have slightly higher incomes, suggesting that stronger earning capacity improves approval likelihood. `Loan_Amount` shows a similar pattern: approved applications are more concentrated at moderate loan sizes, whereas rejected applications display a flatter, more dispersed distribution, indicating a higher rejection rate for larger or less typical loan amounts. `Loan_Term` is more uniform across both classes, though standard loan terms appear marginally more common among approved applicants. Together, these density comparisons suggest that income and loan amount provide more discriminative power between the two classes, while loan term contributes comparatively less to separation.
 
 ```{python}
-eda.density_feature_plots(
-    data=df,
-    numerical_cols=numerical_features,
-    target=target_name,
-    columns=3
-)
+# eda.density_feature_plots(
+#     data=df,
+#     numerical_cols=numerical_features,
+#     target=target_name,
+#     columns=3
+# )
 ```
 
 The boxplots of the numerical features across the two classes confirm the above-mentioned finding in a new light. `Applicant_Income` and `Coapplicant_Income` show wider distributions for approved applications, indicating that applicants with stronger or more stable earnings are more likely to be approved. `Loan_Amount` displays a noticeably fatter right tail for approved cases, though with considerable overlap between the classes. In contrast, `Loan_Term` exhibits similar quartiles across both groups, suggesting that loan duration does not meaningfully differentiate approved from rejected applications. Overall, the boxplots reinforce that income-related features and loan amount contribute more substantially to loan approval outcomes, while loan term plays a limited role.
 
 ```{python}
-eda.boxplot_feature_plots(
-    data=df,
-    numerical_cols=numerical_features,
-    target=target_name,
-    columns=3
-)
+# eda.boxplot_feature_plots(
+#     data=df,
+#     numerical_cols=numerical_features,
+#     target=target_name,
+#     columns=3
+# )
 ```
 
 The correlation heat map shows that the numerical features in the dataset mostly exhibit modest relationships with one another, with most correlations falling in the weak to moderate range. `Applicant_Income` and `Coapplicant_Income` show a mild negative association, reflecting that households with higher primary incomes might have lower secondary incomes. `Loan_Amount` is moderately correlated with `Applicant_Income`, indicating that higher-income applicants tend to seek larger loans. `Loan_Term` shows little correlation with any of the income or loan amount variables, suggesting that the duration of a loan is chosen largely independently of an applicant’s income or requested amount. Overall, the heat map indicates that the numerical features do not exhibit strong collinearity, making them suitable for use together in predictive modeling without concerns about severe multicollinearity.
 
 ```{python}
-eda.correlation_plot(
-    data=df, 
-    column_names=numerical_features)
+# eda.correlation_plot(
+#     data=df, 
+#     column_names=numerical_features)
 ```
 
 ## Model Training 
 
 ```{python}
-from scripts.model_train import *
+# from scripts.model_train import *
 
-# Preprocess
-X_train, X_test, y_train, y_test, features, scaler = preprocess_data(df)
+# # Preprocess
+# X_train, X_test, y_train, y_test, features, scaler = preprocess_data(df)
 
-# Train and save model
-model = train_classifier(X_train, y_train)
+# # Train and save model
+# model = train_classifier(X_train, y_train)
 ```
 
-## Model Testing
+# Results & Discussion
 
 ```{python}
-from sklearn.model_selection import cross_validate
-
-
-# Cross-validation with classification metrics
-classification_metrics = ["accuracy", "precision", "recall", "f1"]
-cross_val_results = pd.DataFrame(cross_validate(model, X_train, y_train, scoring=classification_metrics)).agg(['mean', 'std']).round(3).T
-cross_val_results
-```
-
-## Accuracy Score
-
-```{python}
-# Accuracy Score
-accuracy_score = model.score(X_test, y_test)
-accuracy_score
-```
-
-## Confusion Matrix
-
-```{python}
-from sklearn.metrics import ConfusionMatrixDisplay
-
-# Confusion Matrix
-confmat = ConfusionMatrixDisplay.from_estimator(
-    model,
-    X_test,
-    y_test,
-)
-confmat.ax_.set_title("Confusion Matrix")
-```
-
-Based on the confusion matrix, we can derive several key performance metrics for our loan eligibility prediction model. The model correctly predicted 18 loan denials and 81 loan approvals. The model incorrectly predicted 20 loan denials as approvals (false positives) and 4 loan approvals as denials (false negatives). From this, we can see that the model is better at predicting approvals than denials. Depending on the business context, we may prefer to minimize the false negatives to avoid losing out on potential customers who would have been approved for loans. But, we also need to consider the cost of false positives and minimizing the number of bad loans approved. 
-
-## Classification Report
-
-```{python}
-from sklearn.metrics import classification_report
-
 # Classification Report
-report = pd.DataFrame(classification_report(y_test, model.predict(X_test), output_dict=True))
-report.rename(columns={'0': False, '1': True}, inplace=True)
-report
+classification_report = pd.read_csv("../results/tables/classification_report.csv")
+classification_report.rename(columns={'Unnamed: 0': 'metric'}, inplace=True)
+
+# Cross-validation results
+cross_validation_results = pd.read_csv("../results/tables/cross_validation_results.csv")
+
+test_scores = pd.read_csv("../results/tables/test_scores.csv")
+
+confusion_matrix_csv = pd.read_csv("../results/tables/confusion_matrix.csv")
 ```
 
-From the classification report, we can see that the false precision is 0.82. Meaning that when the model predicts a loan will be denied, it is correct 82% of the time. The recall is 0.47, meaning that the model correctly identifies 47% of all actual loan denials. The true precision is 0.80, meanin gthat when the model predicts a loan will be apporved, it is correct 80% of the time. The recall is 0.95, meaning that the model correctly identifies 95% of all actual loan approvals. From the weighted average column, we can see the overall accuracy of the model is 0.80, meaning that the model correctly predicts loan eligibility 80% of the time.
+#### Accuracy Score
 
-## Precision Recall Curve
+The accuracy score of the model is `{python} round(test_scores.iloc[0, 0], 2)`. This means that the model correctly predicts loan eligibility `{python} round(test_scores.iloc[0, 0], 2)*100`% of the time.
+
+#### Confusion Matrix
+
+![Confusion Matrix](../results/figures/confusion_matrix.png){#fig-confusion_matrix_png width=100%}
+
+Based on the confusion matrix, we can derive several key performance metrics for our loan eligibility prediction model. The model correctly predicted `{python} confusion_matrix_csv.iloc[0, 1]` loan denials and `{python} confusion_matrix_csv.iloc[1, 2]` loan approvals. The model incorrectly predicted `{python} confusion_matrix_csv.iloc[0, 2]` loan denials as approvals (false positives) and `{python} confusion_matrix_csv.iloc[1, 1]` loan approvals as denials (false negatives). From this, we can see that the model is better at predicting approvals than denials. Depending on the business context, we may prefer to minimize the false negatives to avoid losing out on potential customers who would have been approved for loans. But, we also need to consider the cost of false positives and minimizing the number of bad loans approved. 
+
+#### Classification Report
 
 ```{python}
-from sklearn.metrics import PrecisionRecallDisplay
-
-# Precision Recall Curve
-disp = PrecisionRecallDisplay.from_estimator(
-    model,
-    X_test,
-    y_test
-)
-disp.ax_.set_title("Precision-Recall curve")
+Markdown(classification_report.to_markdown())
 ```
 
-From the precision-recall curve, we can see that as we increase the recall, the precision remains high. The AP score is 0.87. This indicates good performance of the model in identifying loan approvals. 
+From the classification report, we can see that the false precision is `{python} round(classification_report.iloc[0, 1], 2)`. Meaning that when the model predicts a loan will be denied, it is correct `{python} round(classification_report.iloc[0, 1], 2) * 100`% of the time. The recall is `{python} round(classification_report.iloc[1, 1], 2)`, meaning that the model correctly identifies `{python} round(classification_report.iloc[1, 1], 2)*100`% of all actual loan denials. The true precision is `{python} round(classification_report.iloc[0, 2], 2)`, meaning that when the model predicts a loan will be approved, it is correct `{python} round(classification_report.iloc[0, 2], 2)*100`% of the time. The recall is `{python} round(classification_report.iloc[1, 2], 2)`, meaning that the model correctly identifies `{python} round(classification_report.iloc[1, 2], 2)*100`% of all actual loan approvals. From the weighted average column, we can see the overall accuracy of the model is `{python} round(classification_report.iloc[0, 3], 2)`, meaning that the model correctly predicts loan eligibility `{python} round(classification_report.iloc[0, 3], 2)*100`% of the time.
 
-## ROC Curve
+#### Precision Recall Curve
 
-```{python}
-from sklearn.metrics import RocCurveDisplay
+![Precision-Recall Curve](../results/figures/precision_recall_curve.png){#fig-precision_recall width=100%}
 
-# ROC Curve
-roc_disp = RocCurveDisplay.from_estimator(
-    model,
-    X_test,
-    y_test
-)
-roc_disp.ax_.set_title("ROC Curve")
-```
+From the precision-recall curve, we can see that as we increase the recall, the precision remains high. The AP score is `{python} round(cross_validation_results.iloc[3, 1], 2)`. This indicates good performance of the model in identifying loan approvals. 
 
-We can see from the ROC curve and the AUC score of 0.80 that the model has good ability to distinguish between approved and denied loan applications. The score suggests that while the model is effective at distinguishing between the two classes, there is still room for improvement for its predictive performance.
+#### ROC Curve
 
-## References
+![ROC Curve](../results/figures/roc_curve.png){#fig-roc width=100%}
 
-Dataset Source: [Kaggle Loan Prediction Dataset](https://www.kaggle.com/datasets/avineshprabhakaran/loan-eligibility-prediction)
+We can see from the ROC curve and the AUC score of `{python} round(classification_report.iloc[2, 3], 2)` that the model has good ability to distinguish between approved and denied loan applications. The score suggests that while the model is effective at distinguishing between the two classes, there is still room for improvement for its predictive performance.
 
-ChatGPT helped us restructure and better present the data analysis section.
-
-MDS DSCI 522 Textbook: [Link](https://ubc-dsci.github.io/reproducible-and-trustworthy-workflows-for-data-science/)
-
-Reference to Data Visualizations: Machine Learning an Algorithmic Perspective by Stephen Marsland
-
-
-
-
-
+# References
