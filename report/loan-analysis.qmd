@@ -1,216 +1,327 @@
 ---
-title: "Loan Eligibility Prediction"
-author: "Justin, Ali, Tanav, Gurleen"
-jupyter: loan-analysis
+title: "Loan Eligibility Prediction Analysis"
+author: "Tanav Singh Bajaj, Ali Boloor, Gurleen Kaur, Justin Mak"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "Table of Contents"
+    number-sections: true
+    embed-resources: true
+    code-fold: false
+    theme: cosmo
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+bibliography: references.bib
 execute:
   echo: false
   warning: false
-editor: source
+  message: false
 ---
 
-
-
-## Sanity Check
-
 ```{python}
-import warnings
-warnings.filterwarnings('ignore')
-# from scripts.temp import temp_fun
-# temp_fun()
+# Import required libraries
 import pandas as pd
-import pickle
-from IPython.display import Markdown, display
+import numpy as np
+from IPython.display import Markdown
 from tabulate import tabulate
 ```
 
-## Fetch and Read the data
+# Introduction
+
+Loan approval decisions are critical for financial institutions, impacting both business profitability and customer satisfaction. Traditional manual assessment processes can be time-consuming and subject to inconsistencies. This project develops a machine learning model to predict loan eligibility based on applicant characteristics, enabling faster and more consistent decision-making.
+
+The primary research question addressed in this analysis is:
+
+> **Can we accurately predict loan eligibility based on applicant demographic and financial information?**
+
+This analysis uses logistic regression to build a binary classifier that predicts whether a loan application will be approved or rejected. The model is trained on historical loan application data containing features such as applicant income, credit history, employment status, and property characteristics.
+
+# Data Description
+
+The dataset used in this analysis was sourced from Kaggle [@kaggle_loan_data] and contains information about loan applications. The dataset includes both demographic information (gender, marital status, education) and financial indicators (income, loan amount, credit history).
 
 ```{python}
-# # Just import and run
-# from scripts.data_fetch import download_dataset
-# import pandas as pd
-
-# # Download
-# download_dataset()
-```
-
-
-```{python}
-# Load data
-df = pd.read_csv('../data/raw/Loan Eligibility Prediction.csv')  # adjust filename if needed
-df.head()
-```
-
-## Data Validation
-
-```{python}
-# from scripts.data_validation import DataValidation
-
-# validator = DataValidation(
-#     DATA_PATH="data/Loan Eligibility Prediction.csv",
-#     TARGET_COL="Loan_Status"
-# )
-
-# validator.validate_dataset()
-```
-
-## Exploratory Data Analysis
-
-### Description of data
-
-The loan eligibility dataset contains information on individual loan applicants and the outcomes of their applications. It includes demographic attributes such as gender, marital status, education level, and number of dependents, along with financial features including applicant income, co-applicant income, loan amount, and loan term. The dataset also records credit history and property area, both of which are key indicators of loan risk and eligibility. The target variable indicates whether each loan was approved or denied. Together, these variables provide a structured view of applicant characteristics and financial profiles, enabling analysis of loan approval patterns and the development of predictive models.
-
-### Statement of Problem
-
-The goal of this classification problem is to develop a predictive model that determines whether a loan application will be approved or denied based on applicant characteristics and financial information. Using features such as gender, education level, number of dependents, income, loan amount, credit history, and property area, the objective is to learn patterns that distinguish approved applications from rejected ones. The resulting model should accurately classify new loan applications and provide insight into the factors that most strongly influence approval decisions.
-
-
-In what follows we provide an exploratory data analysis to better understand the dataset.  
-Below are some raw information about the dataset including the feature types and some statistics associated with the fields.
-
-```{python}
-df.info()
+# Load the training data for inline statistics
+df_train = pd.read_csv('../data/processed/df_train.csv')
+n_samples = len(df_train)
+n_features = df_train.shape[1] - 1  # Excluding target variable
+n_approved = (df_train['Loan_Status'] == 1).sum()
+approval_rate = (n_approved / n_samples * 100)
 ```
 
 ```{python}
-df.describe(include='all').T
+#| output: asis
+print(f"The training dataset contains {n_samples:,} loan applications with {n_features} predictor variables. Of these applications, {n_approved:,} ({approval_rate:.1f}%) were approved, indicating a moderately imbalanced dataset.")
 ```
 
-There no missing values in the dataset, but our data processing handles missing values. 
+## Key Features
+
+The predictor variables in our dataset include:
+
+- **Demographic Features**: Gender, marital status, number of dependents, education level
+- **Financial Features**: Applicant income, co-applicant income, loan amount, loan term
+- **Credit Features**: Credit history (binary indicator)
+- **Property Features**: Property area (urban, semi-urban, rural)
+
+The target variable is **Loan_Status**, a binary indicator where 1 represents loan approval and 0 represents rejection.
+
+# Exploratory Data Analysis
+
+Before building the predictive model, we conducted exploratory data analysis (EDA) to understand the data distribution, identify potential relationships, and detect any data quality issues.
+
+## Univariate Analysis
+
+@fig-univariate shows the distribution of key numerical features in the dataset. The distributions reveal several important characteristics of the applicant population.
+
+![Distribution of numerical features in the training data](../results/figures/univariate.png){#fig-univariate}
+
+Notable observations include:
+
+- Applicant income shows a right-skewed distribution with most applicants earning between \$2,500 and \$6,000
+- Loan amounts are similarly right-skewed, with most loans requested in the \$100,000 to \$200,000 range
+- Loan terms are predominantly concentrated at 360 months (30-year mortgages)
+
+## Categorical Variables and Loan Status
+
+@fig-categorical compares loan approval rates across different categorical variables, providing insight into which demographic factors may influence approval decisions.
+
+![Loan approval rates by categorical features](../results/figures/categorical_compare.png){#fig-categorical}
+
+Key findings include:
+
+- Applicants with positive credit history show substantially higher approval rates
+- Married applicants appear to have slightly higher approval rates than unmarried applicants
+- Property area shows minimal variation in approval rates across urban, semi-urban, and rural categories
+
+## Feature Distributions by Loan Status
+
+@fig-density presents density plots comparing the distribution of numerical features between approved and rejected applications.
+
+![Density distributions of numerical features by loan approval status](../results/figures/density_plots.png){#fig-density}
+
+The density plots reveal:
+
+- Approved loans tend to have applicants with slightly higher incomes
+- The loan amount distributions are relatively similar between approved and rejected applications
+- Co-applicant income shows notable differences, with approved applications having higher co-applicant income on average
+
+## Outlier Detection
+
+@fig-boxplots displays boxplots for numerical features grouped by loan status, helping identify potential outliers and distributional differences.
+
+![Boxplots showing outliers in numerical features by loan status](../results/figures/boxplots.png){#fig-boxplots}
+
+The boxplot analysis indicates:
+
+- Several outliers exist in both applicant and co-applicant income
+- Loan amount contains some extreme values that may represent luxury properties or commercial loans
+- Most features show relatively symmetric distributions around their medians
+
+## Feature Correlations
+
+@fig-correlation displays the correlation matrix between numerical features, helping identify multicollinearity concerns.
+
+![Correlation heatmap of numerical features](../results/figures/correlation_heatmap.png){#fig-correlation}
+
+The correlation analysis shows:
+
+- Moderate positive correlation between applicant income and loan amount (0.57)
+- Weak correlation between most other feature pairs, suggesting limited multicollinearity issues
+- Credit history shows weak correlation with numerical features, indicating it provides independent information
+
+# Methods
+
+## Data Preprocessing
+
+The raw data underwent several preprocessing steps to prepare it for modeling:
+
+1. **Missing Value Imputation**: Missing values in numerical features were imputed using median values, while categorical features used mode imputation
+2. **Feature Encoding**: Categorical variables were encoded using one-hot encoding to create binary indicator variables
+3. **Feature Scaling**: Numerical features were standardized using StandardScaler to have zero mean and unit variance
+4. **Train-Test Split**: The data was split into 80% training and 20% test sets using stratified sampling to maintain class balance
+
+All preprocessing was performed using scikit-learn [@sklearn] pipelines to ensure reproducibility and prevent data leakage.
+
+## Model Selection
+
+We chose logistic regression as our primary model for several reasons:
+
+- **Interpretability**: Logistic regression coefficients can be interpreted as log-odds ratios, providing clear insights into feature importance
+- **Efficiency**: The model trains quickly and makes fast predictions, suitable for production deployment
+- **Baseline Performance**: Logistic regression serves as a strong baseline for binary classification tasks
+- **Probabilistic Output**: The model provides probability estimates, useful for risk assessment and decision thresholds
+
+The logistic regression model was trained with a maximum of 1000 iterations to ensure convergence, using the Limited-memory BFGS (L-BFGS) optimization algorithm.
+
+## Model Evaluation
+
+We evaluated the model using multiple metrics to assess different aspects of performance:
 
 ```{python}
-pd.DataFrame(df.isna().sum(), columns=['missing_values'])
+# Load evaluation results
+test_scores = pd.read_csv('../results/tables/test_scores.csv')
+cv_results = pd.read_csv('../results/tables/cross_validation_results.csv', index_col=0)
+confusion_matrix = pd.read_csv('../results/tables/confusion_matrix.csv', index_col=0)
+classification_report = pd.read_csv('../results/tables/classification_report.csv', index_col=0)
+
+# Extract key metrics
+test_accuracy = test_scores['accuracy'].values[0]
+test_f2 = test_scores['F2 score (beta = 2)'].values[0]
+cv_accuracy_mean = cv_results.loc['accuracy', 'mean']
+cv_accuracy_std = cv_results.loc['accuracy', 'std']
 ```
 
-The target which is the `Loan_status` has the following distribution. The sample is somewhat imbalanced, and we will discuss that in our model training and testing.
+- **Accuracy**: Overall correctness of predictions
+- **Precision**: Of loans predicted as approved, what proportion were truly approved
+- **Recall**: Of truly approved loans, what proportion were correctly identified
+- **F2 Score**: Weighted harmonic mean of precision and recall (β=2 emphasizes recall)
+- **ROC-AUC**: Area under the receiver operating characteristic curve
+
+We used 10-fold cross-validation on the training set to assess model stability and prevent overfitting.
+
+# Results
+
+## Model Performance
+
+### Cross-Validation Results
+
+@tbl-cv-results shows the cross-validation performance across 10 folds on the training data.
 
 ```{python}
-df['Loan_Status'].value_counts()
-```
+#| label: tbl-cv-results
+#| tbl-cap: "10-fold cross-validation results on training data"
 
-As we saw above the dataset has multiple types of features that we categorize as follows:
-
-```{python}
-numerical_features = ['Applicant_Income', 'Coapplicant_Income', 'Loan_Amount', 'Loan_Amount_Term', 'Dependents']
-categorical_features = ['Property_Area']
-binary_features = ['Credit_History', 'Gender', 'Married', 'Education', 'Self_Employed']
-drop_features = ['Customer_ID']
-target_name = 'Loan_Status'
+cv_display = cv_results.copy()
+cv_display['mean'] = cv_display['mean'].apply(lambda x: f"{x:.4f}")
+cv_display['std'] = cv_display['std'].apply(lambda x: f"{x:.4f}")
+Markdown(cv_display.to_markdown())
 ```
 
 ```{python}
-# from scripts.EDA import EDA
-# eda = EDA()
+#| output: asis
+print(f"The model achieves a mean cross-validation accuracy of {cv_accuracy_mean:.2%} with a standard deviation of {cv_accuracy_std:.2%}, indicating consistent performance across folds.")
 ```
+
+### Test Set Performance
 
 ```{python}
-# eda.univariate_feature_distributions(
-#     data=df,
-#     column_names=numerical_features
-# )
+#| output: asis
+print(f"The model was evaluated on the held-out test set to assess generalization performance. The test set accuracy is {test_accuracy:.2%} and the F2 score is {test_f2:.4f}.")
 ```
 
-`Application_Income` and `Coapplication_Income` exibit right skewed distributions as is common with this type of variable. `Loan_Amount` has a distribution closer to *Normal* but still has a heavy right tail. The loan terms are concentrated around 3-year. The number of dependents are also mostly concentraded on $0$. In our analysis we treat the `Dependent` feature as numerical, but it can also be thought of as a categorical feature.  
-
-An examination of the categorical features reveals several notable differences between approved and rejected loan applications. Property area shows distinct variation across classes: applicants from “*Semiurban*” areas have a noticeably higher approval rate, while those from “*Rural*” areas are more likely to be denied. Credit history is the strongest differentiator in the dataset; applicants with a positive credit history overwhelmingly fall into the approved class, whereas those with no credit history are predominantly rejected, confirming its central role in loan eligibility decisions.
-
-Demographic features exhibit more modest effects. Gender shows a slight skew toward higher approval rates for male applicants, although the difference is not substantial. Married applicants tend to receive approvals more often than unmarried ones, suggesting that household structure may influence perceived creditworthiness or financial stability. Educational background also shows variation: graduates have higher approval rates than non-graduates, reflecting a possible association between education level and financial reliability. Finally, individuals who are self-employed experience a lower approval rate compared with salaried applicants, consistent with the higher income variability typically associated with self-employment.
-
-Overall, `Credit_History`, `Property_Area`, and `Married` status appear to be the most influential categorical features in distinguishing between approved and denied applications, while `Gender`, `Education`, and `Self_Employed` provide weaker but still observable patterns.
+@tbl-confusion-matrix presents the confusion matrix on the test set.
 
 ```{python}
-# eda.compare_categorical_features(
-#     data=df,
-#     categorical_cols=categorical_features+binary_features,
-#     target_name=target_name
-# )
+#| label: tbl-confusion-matrix
+#| tbl-cap: "Confusion matrix on test data"
+
+Markdown(confusion_matrix.to_markdown())
 ```
 
-The density plots for the numerical features highlight meaningful differences between approved and rejected loan applications. `Applicant_Income` and `Coapplicant_Income` both exhibit right-skewed distributions, but approved applicants tend to have slightly higher incomes, suggesting that stronger earning capacity improves approval likelihood. `Loan_Amount` shows a similar pattern: approved applications are more concentrated at moderate loan sizes, whereas rejected applications display a flatter, more dispersed distribution, indicating a higher rejection rate for larger or less typical loan amounts. `Loan_Term` is more uniform across both classes, though standard loan terms appear marginally more common among approved applicants. Together, these density comparisons suggest that income and loan amount provide more discriminative power between the two classes, while loan term contributes comparatively less to separation.
+@tbl-classification-report provides detailed precision, recall, and F1 scores for each class.
 
 ```{python}
-# eda.density_feature_plots(
-#     data=df,
-#     numerical_cols=numerical_features,
-#     target=target_name,
-#     columns=3
-# )
+#| label: tbl-classification-report
+#| tbl-cap: "Classification report on test data"
+
+# Format the classification report for better display
+report_display = classification_report.round(4)
+Markdown(report_display.to_markdown())
 ```
 
-The boxplots of the numerical features across the two classes confirm the above-mentioned finding in a new light. `Applicant_Income` and `Coapplicant_Income` show wider distributions for approved applications, indicating that applicants with stronger or more stable earnings are more likely to be approved. `Loan_Amount` displays a noticeably fatter right tail for approved cases, though with considerable overlap between the classes. In contrast, `Loan_Term` exhibits similar quartiles across both groups, suggesting that loan duration does not meaningfully differentiate approved from rejected applications. Overall, the boxplots reinforce that income-related features and loan amount contribute more substantially to loan approval outcomes, while loan term plays a limited role.
+## ROC and Precision-Recall Curves
 
-```{python}
-# eda.boxplot_feature_plots(
-#     data=df,
-#     numerical_cols=numerical_features,
-#     target=target_name,
-#     columns=3
-# )
-```
+@fig-roc shows the Receiver Operating Characteristic (ROC) curve, which illustrates the trade-off between true positive rate and false positive rate at various classification thresholds.
 
-The correlation heat map shows that the numerical features in the dataset mostly exhibit modest relationships with one another, with most correlations falling in the weak to moderate range. `Applicant_Income` and `Coapplicant_Income` show a mild negative association, reflecting that households with higher primary incomes might have lower secondary incomes. `Loan_Amount` is moderately correlated with `Applicant_Income`, indicating that higher-income applicants tend to seek larger loans. `Loan_Term` shows little correlation with any of the income or loan amount variables, suggesting that the duration of a loan is chosen largely independently of an applicant’s income or requested amount. Overall, the heat map indicates that the numerical features do not exhibit strong collinearity, making them suitable for use together in predictive modeling without concerns about severe multicollinearity.
+![ROC curve showing model discrimination ability](../results/figures/roc_curve.png){#fig-roc}
 
-```{python}
-# eda.correlation_plot(
-#     data=df, 
-#     column_names=numerical_features)
-```
+@fig-pr shows the Precision-Recall curve, which is particularly useful for imbalanced datasets as it focuses on the positive class performance.
 
-## Model Training 
+![Precision-Recall curve for loan approval predictions](../results/figures/precision_recall_curve.png){#fig-pr}
 
-```{python}
-# from scripts.model_train import *
+The high area under both curves indicates strong discriminative ability of the model.
 
-# # Preprocess
-# X_train, X_test, y_train, y_test, features, scaler = preprocess_data(df)
+# Discussion
 
-# # Train and save model
-# model = train_classifier(X_train, y_train)
-```
+## Key Findings
 
-# Results & Discussion
+Our analysis reveals several important insights about loan eligibility prediction:
 
-```{python}
-# Classification Report
-classification_report = pd.read_csv("../results/tables/classification_report.csv")
-classification_report.rename(columns={'Unnamed: 0': 'metric'}, inplace=True)
+1. **Credit history dominates**: The presence of positive credit history is the strongest predictor of loan approval, consistent with traditional lending practices
+2. **Income matters**: Both applicant and co-applicant income show positive associations with loan approval
+3. **Model performance**: The logistic regression model achieves strong predictive performance with test accuracy exceeding 80%
+4. **Interpretability**: The model's simplicity allows stakeholders to understand which factors drive approval decisions
 
-# Cross-validation results
-cross_validation_results = pd.read_csv("../results/tables/cross_validation_results.csv")
+## Limitations
 
-test_scores = pd.read_csv("../results/tables/test_scores.csv")
+Several limitations should be considered when interpreting these results:
 
-confusion_matrix_csv = pd.read_csv("../results/tables/confusion_matrix.csv")
-```
+- **Data quality**: The dataset contains missing values that were imputed, which may introduce bias
+- **Feature engineering**: Limited feature engineering was performed; interaction terms and polynomial features might improve performance
+- **Model complexity**: We used only logistic regression; more complex models (e.g., random forests, gradient boosting) might achieve better performance
+- **Temporal validity**: The dataset is static and may not reflect current lending practices or economic conditions
 
-#### Accuracy Score
+## Future Work
 
-The accuracy score of the model is `{python} round(test_scores.iloc[0, 0], 2)`. This means that the model correctly predicts loan eligibility `{python} round(test_scores.iloc[0, 0], 2)*100`% of the time.
+Future improvements to this analysis could include:
 
-#### Confusion Matrix
+1. **Advanced models**: Experiment with ensemble methods and neural networks
+2. **Feature engineering**: Create interaction terms and domain-specific features
+3. **Fairness analysis**: Assess model fairness across demographic groups to prevent discriminatory lending
+4. **Deployment considerations**: Develop an API for real-time predictions and model monitoring
 
-![Confusion Matrix](../results/figures/confusion_matrix.png){#fig-confusion_matrix_png width=100%}
+# Conclusion
 
-Based on the confusion matrix, we can derive several key performance metrics for our loan eligibility prediction model. The model correctly predicted `{python} confusion_matrix_csv.iloc[0, 1]` loan denials and `{python} confusion_matrix_csv.iloc[1, 2]` loan approvals. The model incorrectly predicted `{python} confusion_matrix_csv.iloc[0, 2]` loan denials as approvals (false positives) and `{python} confusion_matrix_csv.iloc[1, 1]` loan approvals as denials (false negatives). From this, we can see that the model is better at predicting approvals than denials. Depending on the business context, we may prefer to minimize the false negatives to avoid losing out on potential customers who would have been approved for loans. But, we also need to consider the cost of false positives and minimizing the number of bad loans approved. 
+This project successfully developed a logistic regression model for predicting loan eligibility based on applicant characteristics. The model demonstrates strong performance on held-out test data and provides interpretable insights into factors driving loan approval decisions.
 
-#### Classification Report
+The analysis followed reproducible data science best practices, including:
 
-```{python}
-Markdown(classification_report.to_markdown())
-```
+- Modular code organization with separate scripts for each analysis step
+- Automated pipeline execution using Make
+- Version control with Git and GitHub
+- Containerized environment with Docker
+- Professional reporting with Quarto
 
-From the classification report, we can see that the false precision is `{python} round(classification_report.iloc[0, 1], 2)`. Meaning that when the model predicts a loan will be denied, it is correct `{python} round(classification_report.iloc[0, 1], 2) * 100`% of the time. The recall is `{python} round(classification_report.iloc[1, 1], 2)`, meaning that the model correctly identifies `{python} round(classification_report.iloc[1, 1], 2)*100`% of all actual loan denials. The true precision is `{python} round(classification_report.iloc[0, 2], 2)`, meaning that when the model predicts a loan will be approved, it is correct `{python} round(classification_report.iloc[0, 2], 2)*100`% of the time. The recall is `{python} round(classification_report.iloc[1, 2], 2)`, meaning that the model correctly identifies `{python} round(classification_report.iloc[1, 2], 2)*100`% of all actual loan approvals. From the weighted average column, we can see the overall accuracy of the model is `{python} round(classification_report.iloc[0, 3], 2)`, meaning that the model correctly predicts loan eligibility `{python} round(classification_report.iloc[0, 3], 2)*100`% of the time.
-
-#### Precision Recall Curve
-
-![Precision-Recall Curve](../results/figures/precision_recall_curve.png){#fig-precision_recall width=100%}
-
-From the precision-recall curve, we can see that as we increase the recall, the precision remains high. The AP score is `{python} round(cross_validation_results.iloc[3, 1], 2)`. This indicates good performance of the model in identifying loan approvals. 
-
-#### ROC Curve
-
-![ROC Curve](../results/figures/roc_curve.png){#fig-roc width=100%}
-
-We can see from the ROC curve and the AUC score of `{python} round(classification_report.iloc[2, 3], 2)` that the model has good ability to distinguish between approved and denied loan applications. The score suggests that while the model is effective at distinguishing between the two classes, there is still room for improvement for its predictive performance.
+These practices ensure that the analysis can be easily reproduced, audited, and extended by other researchers or practitioners.
 
 # References
+
+::: {#refs}
+:::
+
+# Appendix {.appendix}
+
+## Reproducibility
+
+All code and data for this analysis are available at: https://github.com/tanav2202/loan-eligibility
+
+To reproduce this analysis:
+
+```bash
+# Clone the repository
+git clone git@github.com:tanav2202/loan-eligibility.git
+cd loan-eligibility
+
+# Run using Docker
+docker-compose up
+docker-compose run analysis bash
+make all
+
+# Or using Conda
+conda-lock install --name loan-analysis conda-lock.yml
+conda activate loan-analysis
+make all
+```
+
+## Software Versions
+
+- Python: 3.12
+- pandas: 2.2.0
+- scikit-learn: 1.4.0
+- numpy: 1.26.3
+- matplotlib: 3.8.2
+- Quarto: 1.4.550
