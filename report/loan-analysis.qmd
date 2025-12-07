@@ -1,6 +1,20 @@
 ---
-title: Loan Eligibility Prediction Analysis and Model training/testing file
+title: Loan Eligibility Prediction Analysis and Model Training/Testing File
+author: "Justin, Ali, Tanav, Gurleen"
+date: "2025/12/07"
 jupyter: python3
+format: 
+    html:
+        toc: true
+        toc-depth: 2
+    pdf:
+        toc: true
+        toc-depth: 2
+bibliography: references.bib
+execute:
+  echo: false
+  warning: false
+editor: source
 ---
 
 
