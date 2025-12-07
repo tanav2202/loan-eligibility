@@ -10,7 +10,7 @@ import pandas as pd
 import pickle
 import matplotlib.pyplot as plt  # pyright: ignore[reportMissingImports]
 from sklearn import set_config  # pyright: ignore[reportMissingImports]
-from sklearn.metrics import fbeta_score, make_scorer, PrecisionRecallDisplay, RocCurveDisplay, classification_report  # pyright: ignore[reportMissingImports]
+from sklearn.metrics import fbeta_score, make_scorer, PrecisionRecallDisplay, RocCurveDisplay, classification_report, ConfusionMatrixDisplay  # pyright: ignore[reportMissingImports]
 from sklearn.model_selection import cross_validate  # pyright: ignore[reportMissingImports]
 
 @click.command()
@@ -92,8 +92,7 @@ def main(scaled_test_data, test_target, scaled_train_data, train_target, pipelin
     
     # Create test scores dataframe
     test_scores = pd.DataFrame({
-        'accuracy': [accuracy], 
-        'F2 score (beta = 2)': [f2_beta_2_score]
+        'accuracy': [accuracy]
     })
     
     # Ensure results directory exists
@@ -106,6 +105,15 @@ def main(scaled_test_data, test_target, scaled_train_data, train_target, pipelin
     cv_summary.to_csv(os.path.join(results_dir, "cross_validation_results.csv"))
     
     # Create and save confusion matrix
+    confusion_matrix = ConfusionMatrixDisplay.from_estimator(
+        loan_fit,
+        loan_test_X,
+        loan_test_y
+    )
+    confusion_matrix.ax_.set_title("Confusion Matrix")
+    plt.savefig(os.path.join(figures_dir, "confusion_matrix.png"))
+    plt.close()
+    
     confusion_matrix = pd.crosstab(
         loan_preds.iloc[:, 0],  # actual
         loan_preds['predicted'],  # predicted
@@ -114,7 +122,7 @@ def main(scaled_test_data, test_target, scaled_train_data, train_target, pipelin
     )
     
     confusion_matrix.to_csv(os.path.join(results_dir, "confusion_matrix.csv"))
-    
+        
     # Create and save Precision-Recall curve
     disp = PrecisionRecallDisplay.from_estimator(
         loan_fit,
