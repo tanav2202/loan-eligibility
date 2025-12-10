@@ -5,7 +5,7 @@
 .PHONY: all clean help
 
 # Default target
-all: report/loan-analysis.html
+all: reports/loan-analysis.html
 
 # Help target
 help:
@@ -54,8 +54,8 @@ results/tables/test_scores.csv results/figures/roc_curve.png results/figures/pre
 		--random-state 522
 
 # Step 5: Render Quarto report
-report/loan-analysis.html: report/loan-analysis.qmd report/references.bib results/tables/test_scores.csv results/figures/univariate.png
-	cd report && quarto render loan-analysis.qmd
+reports/loan-analysis.html: reports/loan-analysis.qmd reports/references.bib results/tables/test_scores.csv results/figures/univariate.png
+	cd reports && quarto render loan-analysis.qmd
 
 # Clean all generated files
 clean:
@@ -63,7 +63,7 @@ clean:
 	rm -rf results/figures/*
 	rm -rf results/tables/*
 	rm -rf results/models/*
-	rm -f report/loan-analysis.html
-	rm -f report/loan-analysis.pdf
-	rm -rf report/loan-analysis_files
+	rm -f reports/loan-analysis.html
+	rm -f reports/loan-analysis.pdf
+	rm -rf reports/loan-analysis_files
 	@echo "Cleaned all generated files"

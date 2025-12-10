@@ -1,4 +1,6 @@
-FROM jupyter/minimal-notebook:latest
+# FROM jupyter/minimal-notebook:latest
+FROM quay.io/jupyter/minimal-notebook:afe30f0c9ad8
+
 
 USER root
 
@@ -24,10 +26,31 @@ RUN ARCH=$(uname -m) && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"
 
+
+RUN apt update && apt install -y \
+    lmodern \
+    texlive \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-bibtex-extra \
+    texlive-science \
+    texlive-xetex \
+    texlive-luatex \
+    texlive-lang-european \
+    latexmk
+
 USER ${NB_UID}
 
 # Set working directory
 WORKDIR /home/${NB_USER}
 
 # Default command
-CMD ["start-notebook.sh"]
+# CMD ["start-notebook.sh"]
+
+RUN conda update -n base -c conda-forge conda
+
+RUN conda env update --name base --file environment.yml
+
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8000", "--no-browser", "--allow-root"]

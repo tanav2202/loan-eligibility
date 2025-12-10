@@ -11,4 +11,6 @@ services:
         limits:
           memory: 5G
     platform: linux/amd64
-    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
+    command: bash -c "pip install python-json-logger>=2.0.0 && start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
