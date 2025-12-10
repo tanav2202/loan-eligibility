@@ -4,12 +4,30 @@ FROM quay.io/jupyter/minimal-notebook:afe30f0c9ad8
 
 USER root
 
-USER ${NB_UID}
-
 # Copy all lock files and environment file
 COPY conda-linux-64.lock /tmp/conda-linux-64.lock
 COPY conda-linux-aarch64.lock /tmp/conda-linux-aarch64.lock
 COPY environment.yml /tmp/environment.yml
+
+# Install LaTeX packages (must be done as root)
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get install -y --no-install-recommends \
+    lmodern \
+    texlive \
+    texlive-latex-base \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-bibtex-extra \
+    texlive-science \
+    texlive-xetex \
+    texlive-luatex \
+    texlive-lang-european \
+    latexmk && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+USER ${NB_UID}
 
 # Auto-detect platform and install from correct lock file
 RUN ARCH=$(uname -m) && \
@@ -25,23 +43,6 @@ RUN ARCH=$(uname -m) && \
     conda clean --all -y && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"
-
-
-RUN apt update && apt install -y \
-    lmodern \
-    texlive \
-    texlive-latex-base \
-    texlive-latex-extra \
-    texlive-fonts-recommended \
-    texlive-fonts-extra \
-    texlive-bibtex-extra \
-    texlive-science \
-    texlive-xetex \
-    texlive-luatex \
-    texlive-lang-european \
-    latexmk
-
-USER ${NB_UID}
 
 # Set working directory
 WORKDIR /home/${NB_USER}
