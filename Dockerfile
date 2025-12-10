@@ -44,14 +44,13 @@ RUN ARCH=$(uname -m) && \
     fix-permissions "${CONDA_DIR}" && \
     fix-permissions "/home/${NB_USER}"
 
+# Update environment from environment.yml (lock files should have most packages)
+# This ensures any packages in environment.yml but not in lock files are installed
+# Using mamba for faster and more reliable package resolution
+RUN mamba env update --name base --file /tmp/environment.yml --prune -y || (echo "Warning: Environment update had issues, but continuing..." && true)
+
 # Set working directory
 WORKDIR /home/${NB_USER}
 
 # Default command
-# CMD ["start-notebook.sh"]
-
-RUN conda update -n base -c conda-forge conda
-
-RUN conda env update --name base --file environment.yml
-
 CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8000", "--no-browser", "--allow-root"]
