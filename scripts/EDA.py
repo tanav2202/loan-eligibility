@@ -17,8 +17,39 @@ class ExploratoryDataAnalysis():
         ) -> alt.Chart:
         """
         Plot univariate histograms for the given columns.
+        
         Each feature gets its own histogram with its own x/y scale and a title.
-        Charts are concatenated horizontally.
+        Charts are concatenated horizontally. This method is useful for understanding
+        the distribution of individual numerical features.
+        
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Input DataFrame containing the columns to visualize.
+        column_names : List[str]
+            List of column names from the DataFrame to plot. All columns must exist
+            in the DataFrame.
+        bins : int, optional
+            Maximum number of bins for each histogram. Default is 30.
+        
+        Returns
+        -------
+        alt.Chart
+            A single Altair Chart object. Returns a single chart if only one column
+            is provided, otherwise returns a horizontally concatenated chart.
+        
+        Raises
+        ------
+        ValueError
+            If any column name is not found in the DataFrame.
+        
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({'Age': [25, 30, 35], 'Salary': [50000, 60000, 70000]})
+        >>> chart = ExploratoryDataAnalysis.univariate_feature_distributions(
+        ...     df, ['Age', 'Salary']
+        ... )
         """
     
         for col in column_names:
@@ -66,8 +97,49 @@ class ExploratoryDataAnalysis():
         columns: int = 3
     ) -> alt.VConcatChart:
         """
-        Compare categorical features by plotting the mean numeric target value 
-        for each category. Produces a grid of bar charts.
+        Compare categorical features by plotting the mean numeric target value for each category.
+        
+        Produces a grid of bar charts showing how the target variable varies across
+        different categories. Each categorical feature gets its own bar chart with
+        category values on the x-axis and mean target value on the y-axis. Text labels
+        display the exact mean values above each bar.
+        
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Input DataFrame containing both categorical features and the target variable.
+        categorical_cols : List[str]
+            List of categorical column names to analyze. All columns must exist in
+            the DataFrame.
+        target_name : str
+            Name of the numeric target column. Must contain numeric values.
+        columns : int, optional
+            Number of charts per row in the grid layout. Default is 3.
+        
+        Returns
+        -------
+        alt.VConcatChart
+            A vertically concatenated Altair chart object containing the grid of
+            bar charts arranged in rows based on the columns parameter.
+        
+        Raises
+        ------
+        ValueError
+            If target_name is not found in DataFrame.
+            If target column is not numeric.
+            If any categorical column is not found in DataFrame.
+        
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({
+        ...     'Gender': ['M', 'F', 'M', 'F'],
+        ...     'Married': ['Yes', 'No', 'Yes', 'No'],
+        ...     'Loan_Status': [1.0, 0.0, 1.0, 0.0]
+        ... })
+        >>> chart = ExploratoryDataAnalysis.compare_categorical_features(
+        ...     df, ['Gender', 'Married'], 'Loan_Status', columns=2
+        ... )
         """
 
         if target_name not in data.columns:
@@ -137,11 +209,50 @@ class ExploratoryDataAnalysis():
             numerical_cols: List[str],
             target: str,
             columns: int = 3
-        ):
+        ) -> alt.VConcatChart:
         """
-        Create density plots for each numeric feature in `numerical_cols`,
-        grouped by classes in `target`. Independent axes per subplot.
-        Manual grid layout (no facet).
+        Create density plots for numerical features, grouped by target classes.
+        
+        Generates kernel density estimation (KDE) plots for each numerical feature,
+        with separate density curves for each class in the target variable. This helps
+        visualize how feature distributions differ across target classes. Each subplot
+        has independent axes.
+        
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Input DataFrame containing both numerical features and the target variable.
+        numerical_cols : List[str]
+            List of numerical column names to visualize. All columns must exist in
+            the DataFrame and contain numeric values.
+        target : str
+            Name of the categorical target column for grouping density curves.
+            Must exist in the DataFrame.
+        columns : int, optional
+            Number of density plots per row in the grid layout. Default is 3.
+        
+        Returns
+        -------
+        alt.VConcatChart
+            A vertically concatenated Altair chart object containing the grid of
+            density plots arranged in rows based on the columns parameter.
+        
+        Raises
+        ------
+        ValueError
+            If target column is not found in DataFrame.
+            If any numerical column is not found in DataFrame.
+        
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({
+        ...     'Income': [50000, 60000, 70000, 55000],
+        ...     'Loan_Status': [1, 0, 1, 0]
+        ... })
+        >>> chart = ExploratoryDataAnalysis.density_feature_plots(
+        ...     df, ['Income'], 'Loan_Status'
+        ... )
         """
     
         if target not in data.columns:
@@ -198,11 +309,50 @@ class ExploratoryDataAnalysis():
             numerical_cols: List[str],
             target: str,
             columns: int = 3
-        ):
+        ) -> alt.VConcatChart:
         """
-        Create boxplots for each numeric feature in `numerical_cols`,
-        grouped by classes in `target`. Independent axes per subplot.
-        Manual grid layout (no facet).
+        Create boxplots for numerical features, grouped by target classes.
+        
+        Generates boxplots for each numerical feature with separate boxes for each
+        class in the target variable. Boxplots display the distribution, quartiles,
+        and outliers for each feature-class combination. This is useful for identifying
+        outliers and comparing distributions across classes.
+        
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Input DataFrame containing both numerical features and the target variable.
+        numerical_cols : List[str]
+            List of numerical column names to visualize. All columns must exist in
+            the DataFrame and contain numeric values.
+        target : str
+            Name of the categorical target column for grouping boxplots.
+            Must exist in the DataFrame.
+        columns : int, optional
+            Number of boxplots per row in the grid layout. Default is 3.
+        
+        Returns
+        -------
+        alt.VConcatChart
+            A vertically concatenated Altair chart object containing the grid of
+            boxplots arranged in rows based on the columns parameter.
+        
+        Raises
+        ------
+        ValueError
+            If target column is not found in DataFrame.
+            If any numerical column is not found in DataFrame.
+        
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({
+        ...     'Age': [25, 30, 35, 40, 100],
+        ...     'Approved': [1, 1, 0, 1, 0]
+        ... })
+        >>> chart = ExploratoryDataAnalysis.boxplot_feature_plots(
+        ...     df, ['Age'], 'Approved'
+        ... )
         """
     
         if target not in data.columns:
@@ -255,7 +405,44 @@ class ExploratoryDataAnalysis():
             column_names: List[str]
         ) -> alt.Chart:
         """
-        Create a correlation heatmap for the selected feature names.
+        Create a correlation heatmap for selected numerical features.
+        
+        Generates a color-coded heatmap showing pairwise Pearson correlation
+        coefficients between numerical features. Correlations range from -1 (perfect
+        negative) to +1 (perfect positive). Red indicates positive correlations,
+        blue indicates negative correlations, and white indicates zero correlation.
+        Text labels display exact correlation values.
+        
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Input DataFrame containing the numerical features to correlate.
+        column_names : List[str]
+            List of numerical column names to include in correlation analysis.
+            All columns must exist in the DataFrame and contain numeric values.
+        
+        Returns
+        -------
+        alt.Chart
+            An Altair chart object displaying the correlation heatmap with
+            colored rectangles and text annotations.
+        
+        Raises
+        ------
+        ValueError
+            If any column name is not found in the DataFrame.
+        
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({
+        ...     'Age': [25, 30, 35],
+        ...     'Income': [50000, 60000, 70000],
+        ...     'Years_Experience': [2, 5, 8]
+        ... })
+        >>> chart = ExploratoryDataAnalysis.correlation_plot(
+        ...     df, ['Age', 'Income', 'Years_Experience']
+        ... )
         """
     
         for col in column_names:
