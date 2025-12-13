@@ -5,10 +5,7 @@ import altair as alt
 import sys
 from pathlib import Path
 
-<<<<<<< HEAD
-=======
 # Add parent directory to path so we can import scripts
->>>>>>> d09ca03dcec27f704d5bd10816e016d36f05ee7c
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from scripts.EDA import ExploratoryDataAnalysis
