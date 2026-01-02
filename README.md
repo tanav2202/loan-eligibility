@@ -22,12 +22,12 @@ This project implements an end-to-end pipeline for building a loan eligibility c
 │   ├── figures/                  # EDA and model evaluation plots
 │   ├── tables/                   # Analysis tables and metrics
 │   └── models/                   # Trained model artifacts
-├── scripts/                      # Modular Python analysis scripts
+├── src/                      # Modular Python analysis scripts
 │   ├── download_data.py          # Script 1: Download data from Kaggle
 │   ├── process_data.py           # Script 2: Clean and split data
 │   ├── EDA.py                    # Script 3: Generate EDA visualizations
 │   └── train_model.py            # Script 4: Train and evaluate model
-├── report/
+├── reports/
 │   ├── loan-analysis.qmd         # Quarto report document
 │   └── references.bib            # Bibliography file
 ├── environment.yml               # Conda environment specification
@@ -50,7 +50,7 @@ This project implements an end-to-end pipeline for building a loan eligibility c
 
 ### Installation
 
-#### Option 1: Using Docker (Recommended)
+#### Using Docker
 
 1. **Clone the repository**
 ```bash
@@ -62,39 +62,23 @@ cd loan-eligibility
    - Create a Kaggle account at [kaggle.com](https://www.kaggle.com)
    - Navigate to your account settings and create an API token
    - Download the `kaggle.json` credentials file
-   - Place it in the project root directory
-
-3. **Build and run the Docker container**
-```bash
-docker-compose up
-```
-
-4. **Access the container**
-```bash
-docker-compose run analysis bash
-```
-
-#### Option 2: Using Conda
-
-1. **Clone the repository**
-```bash
-git clone git@github.com:tanav2202/loan-eligibility.git
-cd loan-eligibility
-```
-
-2. **Create and activate the conda environment**
-```bash
-conda-lock install --name loan-analysis conda-lock.yml
-conda activate loan-analysis
-```
-
-3. **Configure Kaggle API**
-   - Create a Kaggle account at [kaggle.com](https://www.kaggle.com)
-   - Navigate to your account settings and create an API token
-   - Download the `kaggle.json` credentials file
    - Place it in `~/.kaggle/` (create the directory if it doesn't exist)
    
    For detailed setup instructions, see the [Kaggle API documentation](https://www.kaggle.com/discussions/getting-started/524433).
+3. **Build and run the Docker container**
+```bash
+docker-compose build
+docker-compose up -d
+```
+
+4. **Access the container and run analysis**
+```bash
+docker exec -it loan-analysis bash
+
+make all
+```
+
+The `make all` command runs the complete analysis pipeline inside the container.
 
 ## Running the Analysis
 
@@ -123,7 +107,7 @@ You can also run each script individually with command-line arguments:
 Downloads the loan eligibility dataset from Kaggle.
 
 ```bash
-python scripts/download_data.py \
+python src/download_data.py \
     --dataset-id avineshprabhakaran/loan-eligibility-prediction \
     --output-path "data/raw/Loan Eligibility Prediction.csv"
 
@@ -138,7 +122,7 @@ python scripts/download_data.py \
 Cleans the raw data, handles missing values, and splits into train/test sets.
 
 ```bash
-python scripts/process_data.py \
+python src/process_data.py \
     --input-path "data/raw/Loan Eligibility Prediction.csv" \
     --output-dir data/processed \
     --test-size 0.2 \
@@ -157,7 +141,7 @@ python scripts/process_data.py \
 Generates visualizations and summary tables for understanding the dataset.
 
 ```bash
- python scripts/EDA.py \        
+ python src/EDA.py \        
     --train-data data/processed/df_train.csv \
     --output-dir results/figures
 
@@ -173,7 +157,7 @@ Generates visualizations and summary tables for understanding the dataset.
 Trains a logistic regression model and evaluates its performance.
 
 ```bash
-python scripts/train_model.py \
+python src/train_model.py \
     --train-features data/processed/X_train_scaled.csv \
     --train-labels data/processed/y_train.csv \
     --test-features data/processed/X_test_scaled.csv \
@@ -195,10 +179,10 @@ python scripts/train_model.py \
 After running all scripts, generate the final Quarto report:
 
 ```bash
-quarto render report/loan-analysis.qmd
+quarto render reports/loan-analysis.qmd
 ```
 
-The rendered report will be saved as `report/loan-analysis.html` (and `.pdf` ).
+The rendered report will be saved as `reports/loan-analysis.html` (and `.pdf` ).
 
 ## Dependencies
 
@@ -208,7 +192,7 @@ All project dependencies are managed through:
 - `Dockerfile`: Containerized environment specification
 
 Key dependencies include:
-- Python 3.12
+- Python 3.11
 - pandas, numpy: Data manipulation
 - scikit-learn: Machine learning
 - matplotlib, seaborn: Visualization

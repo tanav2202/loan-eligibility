@@ -25,13 +25,13 @@ help:
 
 # Step 1: Download data from Kaggle
 data/raw/Loan\ Eligibility\ Prediction.csv:
-	python scripts/download_data.py \
+	python src/download_data.py \
 		--dataset-id avineshprabhakaran/loan-eligibility-prediction \
 		--output-path "data/raw/Loan Eligibility Prediction.csv"
 
 # Step 2: Process data (clean, split, validate)
 data/processed/df_train.csv data/processed/X_train_scaled.csv: data/raw/Loan\ Eligibility\ Prediction.csv
-	python scripts/process_data.py \
+	python src/process_data.py \
 		--input-path "data/raw/Loan Eligibility Prediction.csv" \
 		--output-dir data/processed \
 		--test-size 0.2 \
@@ -39,13 +39,13 @@ data/processed/df_train.csv data/processed/X_train_scaled.csv: data/raw/Loan\ El
 
 # Step 3: Generate EDA visualizations
 results/figures/univariate.png results/figures/categorical_compare.png results/figures/density_plots.png results/figures/boxplots.png results/figures/correlation_heatmap.png: data/processed/df_train.csv
-	python scripts/EDA.py \
+	python src/EDA.py \
 		--train-data data/processed/df_train.csv \
 		--output-dir results/figures
 
 # Step 4: Train model and generate evaluation artifacts
 results/tables/test_scores.csv results/figures/roc_curve.png results/figures/precision_recall_curve.png: data/processed/X_train_scaled.csv
-	python scripts/train_model.py \
+	python src/train_model.py \
 		--train-features data/processed/X_train_scaled.csv \
 		--train-labels data/processed/y_train.csv \
 		--test-features data/processed/X_test_scaled.csv \

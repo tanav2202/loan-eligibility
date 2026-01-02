@@ -1,8 +1,11 @@
 services:
   analysis:
-    image: tanav2202/loan-eligibility:latest
+    image: tanav2202/loan-eligibility:v4.0.0
+    build: .
+    container_name: loan-analysis
+    platform: linux/amd64
     ports:
-      - "8888:8888"
+      - "8000:8000"
     volumes:
       - .:/home/jovyan/work
     working_dir: /home/jovyan/work
@@ -10,7 +13,5 @@ services:
       resources:
         limits:
           memory: 5G
-    platform: linux/amd64
-    command: bash -c "pip install python-json-logger>=2.0.0 && start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''"
     environment:
       - JUPYTER_ENABLE_LAB=yes

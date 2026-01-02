@@ -20,6 +20,7 @@ execute:
   echo: false
   warning: false
   message: false
+  timeout: 300
 ---
 
 ```{python}
@@ -305,23 +306,17 @@ To reproduce this analysis:
 # Clone the repository
 git clone git@github.com:tanav2202/loan-eligibility.git
 cd loan-eligibility
-
-# Run using Docker
-docker-compose up
-docker-compose run analysis bash
-make all
-
-# Or using Conda
-conda-lock install --name loan-analysis conda-lock.yml
-conda activate loan-analysis
+docker-compose build
+docker-compose up -d
+docker exec -it loan-analysis bash
 make all
 ```
 
 ## Software Versions
 
-- Python: 3.12
-- pandas: 2.2.0
-- scikit-learn: 1.4.0
-- numpy: 1.26.3
-- matplotlib: 3.8.2
-- Quarto: 1.4.550
+- Python: 3.11
+- pandas: 2.2.*
+- scikit-learn: 1.5.*
+- numpy: 2.4.*
+- matplotlib: 3.8.*
+- Quarto: 1.8.*

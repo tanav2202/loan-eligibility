@@ -1,41 +1,35 @@
 name: 'loan-analysis'
 channels:
   - conda-forge
-  # - defaults
 dependencies:
-  - python>=3.11,<3.13  
-  - pip=25.3
-  - ipykernel=7.1.0
-  - nb_conda_kernels=2.5.1
+  - python=3.11.*
+  - pip=25.*
+  - ipykernel=7.1.*
+  - nb_conda_kernels=2.5.*
   - altair=5.4.* 
-  - vega_datasets=0.9.0
-  - scipy=1.16.3
-  - matplotlib>=3.2.2
-  - scikit-learn=1.7.2
-  - requests>=2.24.0
-  - click>=8.1.7
-  - pandas=2.1.2
-  - graphviz=14.0.4
-  - python-graphviz=0.21
-  # - eli5
-  # - shap>=0.45 
+  - vega_datasets=0.9.*
+  - scipy=1.16.*
+  - matplotlib=3.8.*
+  - scikit-learn=1.5.*
+  - requests=2.32.*
+  - click=8.1.*
+  - pandas=2.2.*
+  - graphviz=14.0.*
+  - python-graphviz=0.21.*
   - quarto
-  - jinja2=3.1.6
-  - lightgbm=4.6.0
-  - spacy=3.8.11
-  - xgboost=3.1.2
-  # - catboost
-  - nltk=3.9.2
-  - kaggle=1.8.0
-  - imbalanced-learn=0.14.0
+  - jinja2=3.1.*
+  - lightgbm=4.6.*
+  - spacy=3.8.*
+  - xgboost=3.1.*
+  - nltk=3.9.*
+  - kaggle=1.8.*
+  - imbalanced-learn=0.14.*
   - conda
   - mamba
-  - tabulate=0.9.0
+  - tabulate=0.9.*
   - vl-convert-python
+  - pytest=8.3.*
+  - pytest-cov=6.0.*
+  - python-json-logger=2.0.*
   - pip:
-    - python-json-logger
     - quarto-cli
-  # - vl-convert-python
-    #   - mglearn
-    #   - spacymoji
-    #   - altair_ally>=0.1.1  
